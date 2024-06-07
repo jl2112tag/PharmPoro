@@ -3,6 +3,8 @@ classdef PharmPoro_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PharmPoroUIFigure              matlab.ui.Figure
+        plotType                       matlab.ui.control.StateButton
+        HoldPlotButton                 matlab.ui.control.StateButton
         PLOTButton                     matlab.ui.control.Button
         TimePositionEditField          matlab.ui.control.NumericEditField
         TimePositionEditFieldLabel     matlab.ui.control.Label
@@ -66,7 +68,8 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         newMeasurement % Acquistion table cell
         timeAxis
         eAmp
-        matBaseline % Baseline matrix [time stamps; amplitudes]
+        timeAxis_BL
+        eAmp_BL
         processStop % Is Stop-button pressed?
         hPlot % Description
         Tcell % Description
@@ -77,57 +80,88 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         
       
 
-        function dispWaveform(app)
+        function dispWaveform(app,mode)
                 fig = app.PharmPoroUIFigure;
-                measMat = readWaveform(app);
-                timeAxis = table2array(measMat(1,2:end));
-                eAmp = table2array(measMat(2,2:end));
-                eAmp = eAmp*-1;
-                timeStamps = table2array(measMat(2,1));
+
+                try 
+                    if mode == 'Baseline'
+                        timeAxis = app.timeAxis_BL;
+                        eAmp = app.eAmp_BL;
+                    else
+                        timeAxis = app.timeAxis;
+                        eAmp = app.eAmp;
+                    end
+                catch
+                    msg = 'Datasets are not ready.'
+                    return;
+                end
 
                 ax = app.UIAxes1;
-                cla(ax)
+                holdPlot = app.HoldPlotButton.Value;
+
+                if holdPlot == false
+                   cla(ax)
+                end
+
                 legend(ax,'off')
                 hold(ax,"on")
                 % axis(ax,"tight")
 
                 hPlot = plot(ax,timeAxis, eAmp, 'linewidth',1);
                 drawnow
-
-                app.timeAxis = timeAxis;
-                app.eAmp = eAmp;
                 app.hPlot = hPlot;
         end
         
-        function measMat = readWaveform(app,single)
+        function readWaveform(app,mode)
             measAverage = app.AverageEditField.Value;
             pythonScript = 'readReflections.py';
             progressFile = 'progress.txt';
             delete(progressFile);
             measurementFile = 'sampleData\dm01.csv';
-            % % pythonRun = true;
-            % % command = sprintf('python %s --average %i', pythonScript, measAverage);
-            % % 
-            % % system(command);
-            % % 
-            % % while pythonRun
-            % %     pause(0.5);
-            % % 
-            % %     try
-            % %         status = fileread(progressFile);
-            % %     catch
-            % %         status = '';
-            % %     end
-            % % 
-            % %     if contains(status,'done')||app.processStop
-            % %         pythonRun = false;
-            % %     end
-            % % 
-            % %     app.StatusEditField.Value = status;
-            % %     drawnow
-            % % end
+            msg = strcat(mode," started");
+            app.StatusEditField.Value = msg;
+
+            pythonRun = true;
+            command = sprintf('python %s --average %i', pythonScript, measAverage);
+
+            system(command);
+
+            while pythonRun
+                pause(0.5);
+
+                try
+                    msg = fileread(progressFile);
+                catch
+                    msg = '';
+                end
+
+                if contains(status,'done')||app.processStop
+                    pythonRun = false;
+                    msg = 'Measurement aborted'
+                end
+
+                app.StatusEditField.Value = msg;
+                drawnow
+            end
 
             measMat = readtable(measurementFile);
+            timeAxis = table2array(measMat(1,2:end));
+            eAmp = table2array(measMat(2,2:end));
+            eAmp = eAmp*-1;
+            %timeStamps = table2array(measMat(2,1));
+
+            if isequal(mode,"Baseline")
+                app.timeAxis_BL = timeAxis;
+                app.eAmp_BL = eAmp;
+            else
+                app.timeAxis = timeAxis;
+                app.eAmp = eAmp;
+            end
+
+            if app.SubtractBaselineCheckBox.Value
+                subtractBaseline(app);
+            end
+
         end
         
         function displayPointInfo(app,src,data)
@@ -153,6 +187,67 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         function updateTable(app)
             Tcell = app.Tcell;
             app.UITable.Data = Tcell;            
+        end
+        
+        function subtractBaseline(app)
+            fig = app.PharmPoroUIFigure;
+
+            try
+                timeAxis_BL = app.timeAxis_BL;
+                eAmp_BL = app.eAmp_BL;
+                timeAxis = app.timeAxis;
+                eAmp = app.eAmp;
+            catch
+                msg = 'Datasets are not ready';
+                uialert(fig,msg,'Warning');
+                app.SubtractBaselineCheckBox.Value = false;
+                return;
+            end
+
+            if size(timeAxis_BL) == size(timeAxis)
+                eAmp = eAmp - eAmp_BL;
+                app.eAmp = eAmp;
+            else
+                msg = 'The baseline time axis does not match the sample measurement.';
+                uialert(fig,msg,'Warning');
+                app.SubtractBaselineCheckBox.Value = false;
+            end
+        end
+        
+        function plotTable(app)
+            Tcell = app.Tcell;
+            ax2 = app.UIAxes2;
+            ax3 = app.UIAxes3;
+
+            cla(ax2);
+            cla(ax3);
+
+            if isempty(Tcell)
+                return
+            end
+
+            binNum = cell2mat(Tcell(:,1));
+            t_indices = cell2mat(Tcell(:,3));
+            n_indices = cell2mat(Tcell(:,4));
+
+            if app.plotType.Value
+                histogram(ax2,t_indices);
+                histogram(ax3,n_indices);
+
+                xlabel(ax2,"Thickness (mm)");
+                ylabel(ax2,"Bin Count");
+                xlabel(ax3,"Refractive Index");
+                ylabel(ax3,"Bin Count");
+
+            else
+                scatter(ax2,binNum,t_indices,"filled");
+                scatter(ax3,binNum,n_indices,"filled");
+
+                xlabel(ax2, "Bin Number");
+                ylabel(ax2, "Thickness (mm)");
+                xlabel(ax3, "Bin Number");
+                ylabel(ax3, "Refractive Index");
+            end
         end
     end
     
@@ -181,8 +276,10 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.processStop = false;
             resetPos(app);
             fig = app.PharmPoroUIFigure;
+            mode = "Tablet";
 
-            dispWaveform(app);
+            readWaveform(app,mode);
+            dispWaveform(app,mode);
             app.SystemReadyLamp.Color = "Green";
             app.SystemReadyLampLabel.Text = "Ready";
             drawnow         
@@ -195,11 +292,11 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
         % Button pushed function: BaselineButton
         function BaselineButtonPushed(app, event)
+            mode = "Baseline";
+
             try
-                measMat = readWaveform(app);
-                timeAxis = table2array(measMat(1,2:end));
-                eAmp = table2array(measMat(2,2:end));
-                app.matBaseline = [timeAxis;eAmp];
+                readWaveform(app,mode);
+                dispWaveform(app,mode);
             catch
                 app.BaselineLamp.Color = [0.85,0.33,0.10];
                 return
@@ -211,8 +308,10 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
         % Button pushed function: RemoveButton
         function RemoveButtonPushed(app, event)
-            app.matBaseline = [];
+            app.timeAxis_BL = [];
+            app.eAmp_BL = [];
             app.BaselineLamp.Color = [0.85,0.33,0.10];
+            app.SubtractBaselineCheckBox.Value = false;
         end
 
         % Button pushed function: FINDPEAKSButton
@@ -225,7 +324,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             numPks = 6;
             ax = app.UIAxes1;
             fig = app.PharmPoroUIFigure;
-            assignin('base',"eAmp",eAmp)
+            %assignin('base',"eAmp",eAmp)
 
             [~,loc_p1] = max(eAmp);
             [~,loc_p3_gap] = max(eAmp(loc_p1+minPkdis:end));
@@ -362,9 +461,18 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             end
 
             % remove the selected row
-            Tcell(indices(1),:) = [];
+            curRow = indices(1);
+            Tcell(curRow,:) = [];
             Tcell(:,1) = num2cell((1:size(Tcell,1)));
             app.Tcell = Tcell;
+
+            if curRow == 1
+                app.cellIndices = [];
+            else
+                indices = [curRow-1, indices(2)];
+                app.cellIndices = indices;
+            end
+
             updateTable(app);
         end
 
@@ -394,23 +502,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
         % Button pushed function: PLOTButton
         function PLOTButtonPushed(app, event)
-            Tcell = app.Tcell;
-            ax2 = app.UIAxes2;
-            ax3 = app.UIAxes3;
-
-            cla(ax2);
-            cla(ax3);
-
-            if isempty(Tcell)
-                return
-            end
-
-            binNum = cell2mat(Tcell(:,1));
-            t_indices = cell2mat(Tcell(:,3));
-            n_indices = cell2mat(Tcell(:,4));
-
-            scatter(ax2,binNum,t_indices,"filled");
-            scatter(ax3,binNum,n_indices,"filled");
+            plotTable(app);
         end
 
         % Button pushed function: SAVEButton
@@ -438,6 +530,20 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             
             disp('File saved successfully.');
         end
+
+        % Value changed function: plotType
+        function plotTypeValueChanged(app, event)
+            value = app.plotType.Value;
+            if value
+                app.plotType.Text = "Histogram";
+            else
+                app.plotType.Text = "Scatter";
+            end
+
+            if ~isempty(app.Tcell)
+                plotTable(app);
+            end
+        end
     end
 
     % Component initialization
@@ -464,7 +570,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes3.Box = 'on';
             app.UIAxes3.XGrid = 'on';
             app.UIAxes3.YGrid = 'on';
-            app.UIAxes3.Position = [412 19 380 270];
+            app.UIAxes3.Position = [412 40 380 270];
 
             % Create UIAxes2
             app.UIAxes2 = uiaxes(app.PharmPoroUIFigure);
@@ -477,7 +583,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes2.Box = 'on';
             app.UIAxes2.XGrid = 'on';
             app.UIAxes2.YGrid = 'on';
-            app.UIAxes2.Position = [28 19 380 270];
+            app.UIAxes2.Position = [28 40 380 270];
 
             % Create UIAxes1
             app.UIAxes1 = uiaxes(app.PharmPoroUIFigure);
@@ -785,7 +891,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.ResetPlotButton.BackgroundColor = [1 1 1];
             app.ResetPlotButton.FontWeight = 'bold';
             app.ResetPlotButton.FontColor = [1 0.4118 0.1608];
-            app.ResetPlotButton.Position = [779 326 96 23];
+            app.ResetPlotButton.Position = [681 326 96 23];
             app.ResetPlotButton.Text = 'Reset Plot';
 
             % Create TABULATETHEMEASUREMENTButton
@@ -803,7 +909,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak1Button.ButtonPushedFcn = createCallbackFcn(app, @Peak1ButtonPushed, true);
             app.Peak1Button.BackgroundColor = [1 1 1];
             app.Peak1Button.FontWeight = 'bold';
-            app.Peak1Button.Position = [497 326 83 23];
+            app.Peak1Button.Position = [399 326 83 23];
             app.Peak1Button.Text = 'Peak 1';
 
             % Create Peak2Button
@@ -811,7 +917,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak2Button.ButtonPushedFcn = createCallbackFcn(app, @Peak2ButtonPushed, true);
             app.Peak2Button.BackgroundColor = [1 1 1];
             app.Peak2Button.FontWeight = 'bold';
-            app.Peak2Button.Position = [589 326 83 23];
+            app.Peak2Button.Position = [491 326 83 23];
             app.Peak2Button.Text = 'Peak 2';
 
             % Create Peak3Button
@@ -819,7 +925,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak3Button.ButtonPushedFcn = createCallbackFcn(app, @Peak3ButtonPushed, true);
             app.Peak3Button.BackgroundColor = [1 1 1];
             app.Peak3Button.FontWeight = 'bold';
-            app.Peak3Button.Position = [681 326 83 23];
+            app.Peak3Button.Position = [583 326 83 23];
             app.Peak3Button.Text = 'Peak 3';
 
             % Create ManualSelectionButton
@@ -828,18 +934,18 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.ManualSelectionButton.Text = 'Manual Selection';
             app.ManualSelectionButton.BackgroundColor = [1 1 1];
             app.ManualSelectionButton.FontWeight = 'bold';
-            app.ManualSelectionButton.Position = [173 326 136 23];
+            app.ManualSelectionButton.Position = [75 326 136 23];
 
             % Create TimePositionEditFieldLabel
             app.TimePositionEditFieldLabel = uilabel(app.PharmPoroUIFigure);
             app.TimePositionEditFieldLabel.HorizontalAlignment = 'right';
-            app.TimePositionEditFieldLabel.Position = [319 326 77 22];
+            app.TimePositionEditFieldLabel.Position = [221 326 77 22];
             app.TimePositionEditFieldLabel.Text = 'Time Position';
 
             % Create TimePositionEditField
             app.TimePositionEditField = uieditfield(app.PharmPoroUIFigure, 'numeric');
             app.TimePositionEditField.ValueDisplayFormat = '%5.2f';
-            app.TimePositionEditField.Position = [403 326 62 22];
+            app.TimePositionEditField.Position = [305 326 62 22];
 
             % Create PLOTButton
             app.PLOTButton = uibutton(app.PharmPoroUIFigure, 'push');
@@ -850,6 +956,23 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.PLOTButton.FontColor = [0 0.4471 0.7412];
             app.PLOTButton.Position = [816 15 98 28];
             app.PLOTButton.Text = 'PLOT';
+
+            % Create HoldPlotButton
+            app.HoldPlotButton = uibutton(app.PharmPoroUIFigure, 'state');
+            app.HoldPlotButton.Text = 'Hold Plot';
+            app.HoldPlotButton.BackgroundColor = [1 1 1];
+            app.HoldPlotButton.FontWeight = 'bold';
+            app.HoldPlotButton.FontColor = [0.4667 0.6745 0.1882];
+            app.HoldPlotButton.Position = [787 326 96 23];
+
+            % Create plotType
+            app.plotType = uibutton(app.PharmPoroUIFigure, 'state');
+            app.plotType.ValueChangedFcn = createCallbackFcn(app, @plotTypeValueChanged, true);
+            app.plotType.Text = 'Scatter';
+            app.plotType.BackgroundColor = [1 1 1];
+            app.plotType.FontWeight = 'bold';
+            app.plotType.FontColor = [0 0.4471 0.7412];
+            app.plotType.Position = [367 18 136 23];
 
             % Show the figure after all components are created
             app.PharmPoroUIFigure.Visible = 'on';
