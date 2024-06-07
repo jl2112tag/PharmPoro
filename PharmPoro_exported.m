@@ -117,7 +117,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             pythonScript = 'readReflections.py';
             progressFile = 'progress.txt';
             delete(progressFile);
-            measurementFile = 'sampleData\dm01.csv';
+            measurementFile = 'tabletRead.csv';
             msg = strcat(mode," started");
             app.StatusEditField.Value = msg;
 
