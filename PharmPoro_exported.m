@@ -120,6 +120,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             measurementFile = 'tabletRead.csv';
             msg = strcat(mode," started");
             app.StatusEditField.Value = msg;
+            drawnow
 
             pythonRun = true;
             command = sprintf('python %s --average %i', pythonScript, measAverage);
@@ -135,9 +136,13 @@ classdef PharmPoro_exported < matlab.apps.AppBase
                     msg = '';
                 end
 
-                if contains(status,'done')||app.processStop
+                if contains(msg,'done')
                     pythonRun = false;
-                    msg = 'Measurement aborted'
+                end
+
+                if app.processStop
+                   pythonRun = false;
+                   msg = 'Measurement aborted'
                 end
 
                 app.StatusEditField.Value = msg;
@@ -276,7 +281,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.processStop = false;
             resetPos(app);
             fig = app.PharmPoroUIFigure;
-            mode = "Tablet";
+            mode = "Measurement";
 
             readWaveform(app,mode);
             dispWaveform(app,mode);
@@ -552,10 +557,14 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         % Create UIFigure and components
         function createComponents(app)
 
+            % Get the file path for locating images
+            pathToMLAPP = fileparts(mfilename('fullpath'));
+
             % Create PharmPoroUIFigure and hide until all components are created
             app.PharmPoroUIFigure = uifigure('Visible', 'off');
             app.PharmPoroUIFigure.Position = [100 100 1232 786];
             app.PharmPoroUIFigure.Name = 'PharmPoro';
+            app.PharmPoroUIFigure.Icon = fullfile(pathToMLAPP, 'CaT_logo.png');
 
             % Create UIAxes3
             app.UIAxes3 = uiaxes(app.PharmPoroUIFigure);

@@ -57,17 +57,19 @@ def getPulse(data):
             writer.writerow(vecData)
     
         # ScanControl.resetAveraging()
-        print(str(i)+' of '+str("1")+' measured.')
+        print(str(i)+' measured.')
         with open('progress.txt','w') as f_prog:
-            progress_message = f"Progress: {i} measurement"
+            progress_message = f"{i} measured"
             f_prog.write(progress_message)
             f_prog.flush()
-        
+        i = i+1
+
+    if i > 1:
         ScanControl.stop()
         client.loop.stop()   
-        print(f"{i-1} measurements done!")                         
+        print(f"Measurement done!")                         
         with open('progress.txt','w') as f:
-            progress_message = f"{i-1} measurements done!"
+            progress_message = f"Measurement done!"
             f.write(progress_message)
             f.flush()
 

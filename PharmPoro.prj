@@ -1,19 +1,24 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration file="C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro\PharmPoro.prj" location="C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro" name="PharmPoro" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="4179219602" file="C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro\PharmPoro.prj" location="C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro" name="PharmPoro" preferred-package-location="C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro\PharmPoro\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>PharmPoro</param.appname>
-    <param.icon />
-    <param.icons />
+    <param.icon>${PROJECT_ROOT}\PharmPoro_resources\icon.ico</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\PharmPoro_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\PharmPoro_resources\icon_32.png</file>
+      <file>${PROJECT_ROOT}\PharmPoro_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\PharmPoro_resources\icon_16.png</file>
+    </param.icons>
     <param.version>1.0</param.version>
-    <param.authnamewatermark />
-    <param.email />
-    <param.company />
-    <param.summary />
+    <param.authnamewatermark>Jongmin Lee</param.authnamewatermark>
+    <param.email>jl2112@cam.ac.uk</param.email>
+    <param.company>University of Cambridge</param.company>
+    <param.summary>Terahertz Pharmaceutical Tablet Refractive Index and Porosity Measurement</param.summary>
     <param.description />
-    <param.screenshot />
+    <param.screenshot>${PROJECT_ROOT}\PharmPoro.png</param.screenshot>
     <param.guid />
     <param.installpath.string>\PharmPoro\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
-    <param.logo />
+    <param.logo>C:\Users\Jongmin Lee\Documents\GitHub\CaTx_Menlo\installer_image.png</param.logo>
     <param.install.notes />
     <param.target.install.notes />
     <param.intermediate>${PROJECT_ROOT}\PharmPoro\for_testing</param.intermediate>
@@ -36,21 +41,17 @@
     <param.native.matlab>false</param.native.matlab>
     <param.checkbox>false</param.checkbox>
     <param.example />
-    <param.help.text />
+    <param.help.text>Syntax 
+	  -? 
+	 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 input arguments</param.help.text>
     <unset>
-      <param.icon />
-      <param.icons />
       <param.version />
-      <param.authnamewatermark />
-      <param.email />
-      <param.company />
-      <param.summary />
       <param.description />
-      <param.screenshot />
       <param.guid />
-      <param.installpath.string />
       <param.installpath.combo />
-      <param.logo />
       <param.install.notes />
       <param.target.install.notes />
       <param.intermediate />
@@ -73,14 +74,15 @@
       <param.native.matlab />
       <param.checkbox />
       <param.example />
-      <param.help.text />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}\PharmPoro.mlapp</file>
     </fileset.main>
     <fileset.resources />
     <fileset.package />
-    <fileset.depfun />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\CaT_logo.png</file>
+    </fileset.depfun>
     <build-deliverables>
       <file location="${PROJECT_ROOT}\PharmPoro\for_testing" name="PharmPoro.exe" optional="false">C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro\PharmPoro\for_testing\PharmPoro.exe</file>
       <file location="${PROJECT_ROOT}\PharmPoro\for_testing" name="readme.txt" optional="true">C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro\PharmPoro\for_testing\readme.txt</file>
