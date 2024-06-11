@@ -14,9 +14,9 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         Peak1Button                    matlab.ui.control.Button
         TABULATETHEMEASUREMENTButton   matlab.ui.control.Button
         ResetPlotButton                matlab.ui.control.Button
-        SAVEButton                     matlab.ui.control.Button
+        LOADButton                     matlab.ui.control.Button
         REMOVEButton                   matlab.ui.control.Button
-        EDITButton                     matlab.ui.control.Button
+        SAVEButton                     matlab.ui.control.Button
         PeakFindingPanel               matlab.ui.container.Panel
         RefractiveIndexEditField       matlab.ui.control.NumericEditField
         RefractiveIndexEditFieldLabel  matlab.ui.control.Label
@@ -64,8 +64,6 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
     
     properties (Access = private)
-        tabletNumber % total number of acquisitions
-        newMeasurement % Acquistion table cell
         timeAxis
         eAmp
         timeAxis_BL
@@ -262,20 +260,11 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app)
-            % Store main app object
-            app.tabletNumber = 1;
+
         end
 
         % Button pushed function: ACQUIREButton
         function ACQUIREButtonPushed(app, event)
-            idx = app.tabletNumber;
-            
-            if app.NumberingSwitch.Value == "On"
-                app.NumberingEditField.Value = idx;
-                idx = idx + 1;
-                app.tabletNumber = idx;
-            end
-
             app.SystemReadyLamp.Color = [0.85,0.33,0.10];
             app.SystemReadyLampLabel.Text = "Scaning...";
             app.processStop = false;
@@ -382,6 +371,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         % Button pushed function: TABULATETHEMEASUREMENTButton
         function TABULATETHEMEASUREMENTButtonPushed(app, event)
             idx = app.NumberingEditField.Value;
+
             idxStr = sprintf('%04d',idx);
             Tcell = app.Tcell;
             entryNum = size(Tcell,1)+1;
@@ -390,6 +380,8 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             
             if app.NumberingSwitch.Value == "On"
                 sampleName = strcat(sampleName,'_',idxStr);
+                idx = idx + 1;
+                app.NumberingEditField.Value = idx;
             end
 
             newEntry =  cell(1,4);
@@ -441,19 +433,12 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
         % Button pushed function: ResetButton
         function ResetButtonPushed(app, event)
-            app.tabletNumber = 1;
-            app.NumberingEditField.Value = 1;
+             app.NumberingEditField.Value = 1;
         end
 
         % Value changed function: NumberingEditField
         function NumberingEditFieldValueChanged(app, event)
             value = app.NumberingEditField.Value;
-            app.tabletNumber = value;
-        end
-
-        % Button pushed function: EDITButton
-        function EDITButtonPushed(app, event)
-            
         end
 
         % Button pushed function: REMOVEButton
@@ -468,14 +453,17 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             % remove the selected row
             curRow = indices(1);
             Tcell(curRow,:) = [];
-            Tcell(:,1) = num2cell((1:size(Tcell,1)));
+            numRow = num2cell((1:size(Tcell,1)));
+            Tcell(:,1) = numRow;
             app.Tcell = Tcell;
 
             if curRow == 1
                 app.cellIndices = [];
+                app.NumberingEditField.Value = 1;
             else
                 indices = [curRow-1, indices(2)];
                 app.cellIndices = indices;
+                app.NumberingEditField.Value = numRow+1;
             end
 
             updateTable(app);
@@ -549,6 +537,33 @@ classdef PharmPoro_exported < matlab.apps.AppBase
                 plotTable(app);
             end
         end
+
+        % Value changed function: NumberingSwitch
+        function NumberingSwitchValueChanged(app, event)
+            value = app.NumberingSwitch.Value;
+            if value == "Off"
+                app.NumberingEditField.Value = 1;
+            end           
+        end
+
+        % Button pushed function: LOADButton
+        function LOADButtonPushed(app, event)
+            [file, filepath] = uigetfile('*.csv');
+
+            if isequal(file,0)
+                return;
+            end
+
+            fullpath = strcat(filepath,file);
+            Tcell = readtable(fullpath,'PreserveVariableNames', true);
+            Tcell = table2cell(Tcell);
+            curNum = size(Tcell,1)+1;
+            app.NumberingEditField.Value = curNum;
+
+            app.Tcell = Tcell;
+
+            updateTable(app);            
+        end
     end
 
     % Component initialization
@@ -579,7 +594,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes3.Box = 'on';
             app.UIAxes3.XGrid = 'on';
             app.UIAxes3.YGrid = 'on';
-            app.UIAxes3.Position = [412 40 380 270];
+            app.UIAxes3.Position = [412 55 380 270];
 
             % Create UIAxes2
             app.UIAxes2 = uiaxes(app.PharmPoroUIFigure);
@@ -592,7 +607,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes2.Box = 'on';
             app.UIAxes2.XGrid = 'on';
             app.UIAxes2.YGrid = 'on';
-            app.UIAxes2.Position = [28 40 380 270];
+            app.UIAxes2.Position = [28 55 380 270];
 
             % Create UIAxes1
             app.UIAxes1 = uiaxes(app.PharmPoroUIFigure);
@@ -605,7 +620,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes1.Box = 'on';
             app.UIAxes1.XGrid = 'on';
             app.UIAxes1.YGrid = 'on';
-            app.UIAxes1.Position = [28 365 861 366];
+            app.UIAxes1.Position = [28 387 861 366];
 
             % Create AcquisitionSetttingsPanel
             app.AcquisitionSetttingsPanel = uipanel(app.PharmPoroUIFigure);
@@ -706,6 +721,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             % Create NumberingSwitch
             app.NumberingSwitch = uiswitch(app.AcquisitionSetttingsPanel, 'slider');
             app.NumberingSwitch.Items = {'On', 'Off'};
+            app.NumberingSwitch.ValueChangedFcn = createCallbackFcn(app, @NumberingSwitchValueChanged, true);
             app.NumberingSwitch.Position = [118 86 45 20];
             app.NumberingSwitch.Value = 'On';
 
@@ -864,15 +880,15 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.RefractiveIndexEditField.Position = [253 37 37 22];
             app.RefractiveIndexEditField.Value = 1;
 
-            % Create EDITButton
-            app.EDITButton = uibutton(app.PharmPoroUIFigure, 'push');
-            app.EDITButton.ButtonPushedFcn = createCallbackFcn(app, @EDITButtonPushed, true);
-            app.EDITButton.BackgroundColor = [1 1 1];
-            app.EDITButton.FontSize = 14;
-            app.EDITButton.FontWeight = 'bold';
-            app.EDITButton.FontColor = [0 0.4471 0.7412];
-            app.EDITButton.Position = [922 15 89 28];
-            app.EDITButton.Text = 'EDIT';
+            % Create SAVEButton
+            app.SAVEButton = uibutton(app.PharmPoroUIFigure, 'push');
+            app.SAVEButton.ButtonPushedFcn = createCallbackFcn(app, @SAVEButtonPushed, true);
+            app.SAVEButton.BackgroundColor = [1 1 1];
+            app.SAVEButton.FontSize = 14;
+            app.SAVEButton.FontWeight = 'bold';
+            app.SAVEButton.FontColor = [0.0745 0.6235 1];
+            app.SAVEButton.Position = [1115 15 89 28];
+            app.SAVEButton.Text = 'SAVE';
 
             % Create REMOVEButton
             app.REMOVEButton = uibutton(app.PharmPoroUIFigure, 'push');
@@ -881,18 +897,18 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.REMOVEButton.FontSize = 14;
             app.REMOVEButton.FontWeight = 'bold';
             app.REMOVEButton.FontColor = [1 0.4118 0.1608];
-            app.REMOVEButton.Position = [1019 15 89 28];
+            app.REMOVEButton.Position = [919 15 89 28];
             app.REMOVEButton.Text = 'REMOVE';
 
-            % Create SAVEButton
-            app.SAVEButton = uibutton(app.PharmPoroUIFigure, 'push');
-            app.SAVEButton.ButtonPushedFcn = createCallbackFcn(app, @SAVEButtonPushed, true);
-            app.SAVEButton.BackgroundColor = [1 1 1];
-            app.SAVEButton.FontSize = 14;
-            app.SAVEButton.FontWeight = 'bold';
-            app.SAVEButton.FontColor = [0.0745 0.6235 1];
-            app.SAVEButton.Position = [1116 15 89 28];
-            app.SAVEButton.Text = 'SAVE';
+            % Create LOADButton
+            app.LOADButton = uibutton(app.PharmPoroUIFigure, 'push');
+            app.LOADButton.ButtonPushedFcn = createCallbackFcn(app, @LOADButtonPushed, true);
+            app.LOADButton.BackgroundColor = [1 1 1];
+            app.LOADButton.FontSize = 14;
+            app.LOADButton.FontWeight = 'bold';
+            app.LOADButton.FontColor = [0.0745 0.6235 1];
+            app.LOADButton.Position = [1017 15 89 28];
+            app.LOADButton.Text = 'LOAD';
 
             % Create ResetPlotButton
             app.ResetPlotButton = uibutton(app.PharmPoroUIFigure, 'push');
@@ -900,7 +916,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.ResetPlotButton.BackgroundColor = [1 1 1];
             app.ResetPlotButton.FontWeight = 'bold';
             app.ResetPlotButton.FontColor = [1 0.4118 0.1608];
-            app.ResetPlotButton.Position = [681 326 96 23];
+            app.ResetPlotButton.Position = [681 348 96 23];
             app.ResetPlotButton.Text = 'Reset Plot';
 
             % Create TABULATETHEMEASUREMENTButton
@@ -918,7 +934,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak1Button.ButtonPushedFcn = createCallbackFcn(app, @Peak1ButtonPushed, true);
             app.Peak1Button.BackgroundColor = [1 1 1];
             app.Peak1Button.FontWeight = 'bold';
-            app.Peak1Button.Position = [399 326 83 23];
+            app.Peak1Button.Position = [399 348 83 23];
             app.Peak1Button.Text = 'Peak 1';
 
             % Create Peak2Button
@@ -926,7 +942,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak2Button.ButtonPushedFcn = createCallbackFcn(app, @Peak2ButtonPushed, true);
             app.Peak2Button.BackgroundColor = [1 1 1];
             app.Peak2Button.FontWeight = 'bold';
-            app.Peak2Button.Position = [491 326 83 23];
+            app.Peak2Button.Position = [491 348 83 23];
             app.Peak2Button.Text = 'Peak 2';
 
             % Create Peak3Button
@@ -934,7 +950,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak3Button.ButtonPushedFcn = createCallbackFcn(app, @Peak3ButtonPushed, true);
             app.Peak3Button.BackgroundColor = [1 1 1];
             app.Peak3Button.FontWeight = 'bold';
-            app.Peak3Button.Position = [583 326 83 23];
+            app.Peak3Button.Position = [583 348 83 23];
             app.Peak3Button.Text = 'Peak 3';
 
             % Create ManualSelectionButton
@@ -943,18 +959,18 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.ManualSelectionButton.Text = 'Manual Selection';
             app.ManualSelectionButton.BackgroundColor = [1 1 1];
             app.ManualSelectionButton.FontWeight = 'bold';
-            app.ManualSelectionButton.Position = [75 326 136 23];
+            app.ManualSelectionButton.Position = [75 348 136 23];
 
             % Create TimePositionEditFieldLabel
             app.TimePositionEditFieldLabel = uilabel(app.PharmPoroUIFigure);
             app.TimePositionEditFieldLabel.HorizontalAlignment = 'right';
-            app.TimePositionEditFieldLabel.Position = [221 326 77 22];
+            app.TimePositionEditFieldLabel.Position = [221 348 77 22];
             app.TimePositionEditFieldLabel.Text = 'Time Position';
 
             % Create TimePositionEditField
             app.TimePositionEditField = uieditfield(app.PharmPoroUIFigure, 'numeric');
             app.TimePositionEditField.ValueDisplayFormat = '%5.2f';
-            app.TimePositionEditField.Position = [305 326 62 22];
+            app.TimePositionEditField.Position = [305 348 62 22];
 
             % Create PLOTButton
             app.PLOTButton = uibutton(app.PharmPoroUIFigure, 'push');
@@ -963,7 +979,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.PLOTButton.FontSize = 14;
             app.PLOTButton.FontWeight = 'bold';
             app.PLOTButton.FontColor = [0 0.4471 0.7412];
-            app.PLOTButton.Position = [816 15 98 28];
+            app.PLOTButton.Position = [820 15 89 28];
             app.PLOTButton.Text = 'PLOT';
 
             % Create HoldPlotButton
@@ -972,7 +988,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.HoldPlotButton.BackgroundColor = [1 1 1];
             app.HoldPlotButton.FontWeight = 'bold';
             app.HoldPlotButton.FontColor = [0.4667 0.6745 0.1882];
-            app.HoldPlotButton.Position = [787 326 96 23];
+            app.HoldPlotButton.Position = [787 348 96 23];
 
             % Create plotType
             app.plotType = uibutton(app.PharmPoroUIFigure, 'state');
@@ -981,7 +997,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.plotType.BackgroundColor = [1 1 1];
             app.plotType.FontWeight = 'bold';
             app.plotType.FontColor = [0 0.4471 0.7412];
-            app.plotType.Position = [367 18 136 23];
+            app.plotType.Position = [345 18 147 23];
 
             % Show the figure after all components are created
             app.PharmPoroUIFigure.Visible = 'on';
