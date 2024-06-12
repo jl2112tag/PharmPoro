@@ -3,6 +3,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PharmPoroUIFigure              matlab.ui.Figure
+        RESETButton                    matlab.ui.control.Button
         plotType                       matlab.ui.control.StateButton
         HoldPlotButton                 matlab.ui.control.StateButton
         PLOTButton                     matlab.ui.control.Button
@@ -282,6 +283,14 @@ classdef PharmPoro_exported < matlab.apps.AppBase
         % Button pushed function: STOPButton
         function STOPButtonPushed(app, event)
             app.processStop = true;
+
+            try
+                system('taskkill /F /IM python.exe');
+                app.StatusEditField.Value = 'Python process killed externally.';
+            catch
+                app.StatusEditField.Value = 'Python process is not running.';            
+            end
+            drawnow;
         end
 
         % Button pushed function: BaselineButton
@@ -453,20 +462,26 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             % remove the selected row
             curRow = indices(1);
             Tcell(curRow,:) = [];
-            numRow = num2cell((1:size(Tcell,1)));
-            Tcell(:,1) = numRow;
-            app.Tcell = Tcell;
+            numRow = size(Tcell,1);
 
-            if curRow == 1
-                app.cellIndices = [];
-                app.NumberingEditField.Value = 1;
-            else
+            if curRow >= numRow && curRow ~= 1
                 indices = [curRow-1, indices(2)];
                 app.cellIndices = indices;
-                app.NumberingEditField.Value = numRow+1;
             end
 
+
+
+            if numRow >= 1
+                Tcell(:,1) = num2cell((1:numRow));
+                app.NumberingEditField.Value = numRow + 1;
+            else
+                app.cellIndices = [];
+                app.NumberingEditField.Value = 1;
+            end
+
+            app.Tcell = Tcell;
             updateTable(app);
+            drawnow
         end
 
         % Cell selection callback: UITable
@@ -563,6 +578,13 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Tcell = Tcell;
 
             updateTable(app);            
+        end
+
+        % Button pushed function: RESETButton
+        function RESETButtonPushed(app, event)
+            app.Tcell =[];
+            app.NumberingEditField.Value = 1;
+            updateTable(app);
         end
     end
 
@@ -887,7 +909,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.SAVEButton.FontSize = 14;
             app.SAVEButton.FontWeight = 'bold';
             app.SAVEButton.FontColor = [0.0745 0.6235 1];
-            app.SAVEButton.Position = [1115 15 89 28];
+            app.SAVEButton.Position = [1133 15 71 28];
             app.SAVEButton.Text = 'SAVE';
 
             % Create REMOVEButton
@@ -897,7 +919,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.REMOVEButton.FontSize = 14;
             app.REMOVEButton.FontWeight = 'bold';
             app.REMOVEButton.FontColor = [1 0.4118 0.1608];
-            app.REMOVEButton.Position = [919 15 89 28];
+            app.REMOVEButton.Position = [975 15 71 28];
             app.REMOVEButton.Text = 'REMOVE';
 
             % Create LOADButton
@@ -907,7 +929,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.LOADButton.FontSize = 14;
             app.LOADButton.FontWeight = 'bold';
             app.LOADButton.FontColor = [0.0745 0.6235 1];
-            app.LOADButton.Position = [1017 15 89 28];
+            app.LOADButton.Position = [1054 15 71 28];
             app.LOADButton.Text = 'LOAD';
 
             % Create ResetPlotButton
@@ -979,7 +1001,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.PLOTButton.FontSize = 14;
             app.PLOTButton.FontWeight = 'bold';
             app.PLOTButton.FontColor = [0 0.4471 0.7412];
-            app.PLOTButton.Position = [820 15 89 28];
+            app.PLOTButton.Position = [817 15 71 28];
             app.PLOTButton.Text = 'PLOT';
 
             % Create HoldPlotButton
@@ -998,6 +1020,16 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.plotType.FontWeight = 'bold';
             app.plotType.FontColor = [0 0.4471 0.7412];
             app.plotType.Position = [345 18 147 23];
+
+            % Create RESETButton
+            app.RESETButton = uibutton(app.PharmPoroUIFigure, 'push');
+            app.RESETButton.ButtonPushedFcn = createCallbackFcn(app, @RESETButtonPushed, true);
+            app.RESETButton.BackgroundColor = [1 1 1];
+            app.RESETButton.FontSize = 14;
+            app.RESETButton.FontWeight = 'bold';
+            app.RESETButton.FontColor = [1 0.4118 0.1608];
+            app.RESETButton.Position = [896 15 71 28];
+            app.RESETButton.Text = 'RESET';
 
             % Show the figure after all components are created
             app.PharmPoroUIFigure.Visible = 'on';

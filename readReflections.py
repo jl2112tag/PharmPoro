@@ -26,14 +26,13 @@ print('waveform_average =',str(int(waveform_average)))
 vecData = []
 avgReset = False
 FileName = 'tabletRead.csv'
-i=1
+getData = True;
 
 #%%
 def getPulse(data):
-    global i, waveform_average, start_time, avgReset, current_rate, vecData
+    global waveform_average, start_time, avgReset, vecData, getData
     ScanControl.setDesiredAverages(waveform_average)
     numAvg = ScanControl.currentAverages
-    current_rate = ScanControl.rate
     
     if numAvg < waveform_average or 1 == waveform_average:
         avgReset = True
@@ -41,37 +40,39 @@ def getPulse(data):
     if numAvg == waveform_average and avgReset:
         avgReset = False
         
-        timeAxis=np.asarray(np.frombuffer(base64.b64decode(ScanControl.timeAxis), dtype=np.float64)) # import time axis (x-axis)
-        timeAxis = np.insert(timeAxis,0,0)
-        vecData = timeAxis
-        with open(FileName,'w', newline='') as f_meas:
-            writer = csv.writer(f_meas)
-            writer.writerow(vecData)
-                    
-        ms = round(time.time()*1000)/1000 # measurement time in milliseconds
-        eAmp = data['amplitude'][0] # import E-field data
-        eAmp = np.insert(eAmp,0,ms)
-        vecData = eAmp
-        with open(FileName,'a', newline='') as f_meas:
-            writer = csv.writer(f_meas)
-            writer.writerow(vecData)
-    
-        # ScanControl.resetAveraging()
-        print(str(i)+' measured.')
-        with open('progress.txt','w') as f_prog:
-            progress_message = f"{i} measured"
-            f_prog.write(progress_message)
-            f_prog.flush()
-        i = i+1
+        if getData:
+            timeAxis=np.asarray(np.frombuffer(base64.b64decode(ScanControl.timeAxis), dtype=np.float64)) # import time axis (x-axis)
+            timeAxis = np.insert(timeAxis,0,0)
+            vecData = timeAxis
+            with open(FileName,'w', newline='') as f_meas:
+                writer = csv.writer(f_meas)
+                writer.writerow(vecData)
 
-    if i > 1:
-        ScanControl.stop()
-        client.loop.stop()   
-        print(f"Measurement done!")                         
-        with open('progress.txt','w') as f:
-            progress_message = f"Measurement done!"
-            f.write(progress_message)
-            f.flush()
+            ms = round(time.time()*1000)/1000 # measurement time in milliseconds
+            eAmp = data['amplitude'][0] # import E-field data
+            eAmp = np.insert(eAmp,0,ms)
+            vecData = eAmp
+            with open(FileName,'a', newline='') as f_meas:
+                writer = csv.writer(f_meas)
+                writer.writerow(vecData)
+    
+            # ScanControl.resetAveraging()
+            print('1 measured.')
+            with open('progress.txt','w') as f_prog:
+                progress_message = "1 measured"
+                f_prog.write(progress_message)
+                f_prog.flush()
+            waveform_average = 1
+            getData = False
+        else:
+            ScanControl.stop()
+            client.loop.stop()   
+            print(f"Measurement done!") 
+            print(f"{numAvg} waveform average")                        
+            with open('progress.txt','w') as f:
+                progress_message = f"Measurement done!"
+                f.write(progress_message)
+                f.flush()
 
 #%%
 
