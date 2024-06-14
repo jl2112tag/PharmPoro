@@ -25,7 +25,8 @@ print('waveform_average =',str(int(waveform_average)))
     
 vecData = []
 avgReset = False
-FileName = 'tabletRead.csv'
+statusFile = 'progress.txt'
+measurementFile = 'tabletRead.csv'
 getData = True;
 
 #%%
@@ -44,7 +45,7 @@ def getPulse(data):
             timeAxis=np.asarray(np.frombuffer(base64.b64decode(ScanControl.timeAxis), dtype=np.float64)) # import time axis (x-axis)
             timeAxis = np.insert(timeAxis,0,0)
             vecData = timeAxis
-            with open(FileName,'w', newline='') as f_meas:
+            with open(measurementFile,'w', newline='') as f_meas:
                 writer = csv.writer(f_meas)
                 writer.writerow(vecData)
 
@@ -52,33 +53,29 @@ def getPulse(data):
             eAmp = data['amplitude'][0] # import E-field data
             eAmp = np.insert(eAmp,0,ms)
             vecData = eAmp
-            with open(FileName,'a', newline='') as f_meas:
+            with open(measurementFile,'a', newline='') as f_meas:
                 writer = csv.writer(f_meas)
                 writer.writerow(vecData)
     
-            # ScanControl.resetAveraging()
-            print('1 measured.')
-            with open('progress.txt','w') as f_prog:
-                progress_message = "1 measured"
-                f_prog.write(progress_message)
-                f_prog.flush()
+            write_status("1 measured")
             waveform_average = 1
             getData = False
         else:
             ScanControl.stop()
             client.loop.stop()   
-            print(f"Measurement done!") 
             print(f"{numAvg} waveform average")                        
-            with open('progress.txt','w') as f:
-                progress_message = f"Measurement done!"
-                f.write(progress_message)
-                f.flush()
+            write_status(f"Measurement done!")
 
-#%%
+def write_status(msg):
+    print(msg)
+    with open(statusFile,'w') as f:
+        f.write(msg)
+        f.flush()
 
 client = ScanControlClient()
 client.connect(host=address)
 ScanControl = client.scancontrol
+write_status("Python script runs")
 ScanControl.resetAveraging()
 client.loop.run_until_complete(ScanControl.start())
 ScanControl.pulseReady.connect(getPulse)
