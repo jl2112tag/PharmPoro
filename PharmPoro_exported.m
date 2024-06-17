@@ -118,37 +118,45 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             delete(progressFile);
             measurementFile = 'tabletRead.csv';
             msg = strcat(mode," started");
+            measMat = [];
             app.StatusEditField.Value = msg;
             drawnow
 
-            pythonRun = true;
+            runPython = true;
             command = sprintf('python %s --average %i', pythonScript, measAverage);
 
             system(command);
+            pause(2.0);
 
-            while pythonRun
+            while runPython
                 pause(0.5);
 
                 try
                     msg = fileread(progressFile);
                 catch
-                    msg = '';
-                end
-
-                if contains(msg,'done')
-                    pythonRun = false;
+                    msg = "Python run error!";
+                    runPython = false;
                 end
 
                 if app.processStop
-                   pythonRun = false;
-                   msg = 'Measurement aborted'
+                    msg = "Measurement aborted!";
+                    runPython = false;
+                end
+
+                if contains(msg,'done')
+                    msg = "Measurement done!";
+                    runPython = false;
+                    measMat = readtable(measurementFile);
                 end
 
                 app.StatusEditField.Value = msg;
                 drawnow
+            end                
+
+            if isempty(measMat)
+                return;
             end
 
-            measMat = readtable(measurementFile);
             timeAxis = table2array(measMat(1,2:end));
             eAmp = table2array(measMat(2,2:end));
             eAmp = eAmp*-1;
@@ -305,8 +313,12 @@ classdef PharmPoro_exported < matlab.apps.AppBase
                 return
             end
 
-            app.BaselineLamp.Color = "Green";
-
+            if isempty(app.eAmp_BL)
+                app.BaselineLamp.Color = [0.85,0.33,0.10];
+            else
+                app.BaselineLamp.Color = "Green";
+            end
+            
         end
 
         % Button pushed function: RemoveButton
@@ -582,9 +594,16 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
         % Button pushed function: RESETButton
         function RESETButtonPushed(app, event)
-            app.Tcell =[];
-            app.NumberingEditField.Value = 1;
-            updateTable(app);
+            question = "Do you want to reset the table?";
+            answer = questdlg(question,'Warning','Yes','No','No');
+            
+            if answer == "Yes"
+                app.Tcell =[];
+                app.NumberingEditField.Value = 1;
+                updateTable(app);
+            else
+                return;
+            end
         end
     end
 
