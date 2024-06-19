@@ -405,11 +405,14 @@ classdef PharmPoro_exported < matlab.apps.AppBase
                 app.NumberingEditField.Value = idx;
             end
 
-            newEntry =  cell(1,4);
+            newEntry =  cell(1,7);
             newEntry{1} = int16(entryNum);
             newEntry{2} = sampleName;
             newEntry{3} = app.ThicknessEditField.Value;
             newEntry{4} = app.RefractiveIndexEditField.Value;
+            newEntry{5} = app.TabletTopEditField.Value;
+            newEntry{6} = app.SubstrateEditField.Value;
+            newEntry{7} = app.TabletBottomEditField.Value;
             Tcell = [Tcell;newEntry];
             app.Tcell = Tcell;
 
@@ -543,7 +546,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             Tcell = app.Tcell;
             
             % Convert the cell array to a table and specify the column names
-            T = cell2table(Tcell, 'VariableNames', {'No', 'Sample Name', 'Thickness(mm)', 'Refractive Index'});
+            T = cell2table(Tcell, 'VariableNames', {'No', 'Sample Name', 'Thickness(mm)', 'Refractive Index','Peak 1','Peak 2', 'Peak 3'});
 
             % Write the table to a CSV file
             writetable(T, fullFileName);
@@ -618,7 +621,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
             % Create PharmPoroUIFigure and hide until all components are created
             app.PharmPoroUIFigure = uifigure('Visible', 'off');
-            app.PharmPoroUIFigure.Position = [100 100 1232 786];
+            app.PharmPoroUIFigure.Position = [100 100 1221 900];
             app.PharmPoroUIFigure.Name = 'PharmPoro';
             app.PharmPoroUIFigure.Icon = fullfile(pathToMLAPP, 'CaT_logo.png');
 
@@ -635,7 +638,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes3.Box = 'on';
             app.UIAxes3.XGrid = 'on';
             app.UIAxes3.YGrid = 'on';
-            app.UIAxes3.Position = [412 55 380 270];
+            app.UIAxes3.Position = [28 34 580 200];
 
             % Create UIAxes2
             app.UIAxes2 = uiaxes(app.PharmPoroUIFigure);
@@ -648,7 +651,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes2.Box = 'on';
             app.UIAxes2.XGrid = 'on';
             app.UIAxes2.YGrid = 'on';
-            app.UIAxes2.Position = [28 55 380 270];
+            app.UIAxes2.Position = [28 245 580 200];
 
             % Create UIAxes1
             app.UIAxes1 = uiaxes(app.PharmPoroUIFigure);
@@ -661,14 +664,14 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.UIAxes1.Box = 'on';
             app.UIAxes1.XGrid = 'on';
             app.UIAxes1.YGrid = 'on';
-            app.UIAxes1.Position = [28 387 861 366];
+            app.UIAxes1.Position = [28 501 861 366];
 
             % Create AcquisitionSetttingsPanel
             app.AcquisitionSetttingsPanel = uipanel(app.PharmPoroUIFigure);
             app.AcquisitionSetttingsPanel.Title = 'Acquisition Setttings';
             app.AcquisitionSetttingsPanel.FontWeight = 'bold';
             app.AcquisitionSetttingsPanel.FontSize = 13;
-            app.AcquisitionSetttingsPanel.Position = [913 522 298 213];
+            app.AcquisitionSetttingsPanel.Position = [913 636 298 213];
 
             % Create SubtractBaselineCheckBox
             app.SubtractBaselineCheckBox = uicheckbox(app.AcquisitionSetttingsPanel);
@@ -778,32 +781,32 @@ classdef PharmPoro_exported < matlab.apps.AppBase
 
             % Create SystemReadyLamp
             app.SystemReadyLamp = uilamp(app.PharmPoroUIFigure);
-            app.SystemReadyLamp.Position = [916 746 20 20];
+            app.SystemReadyLamp.Position = [916 860 20 20];
 
             % Create SystemReadyLampLabel
             app.SystemReadyLampLabel = uilabel(app.PharmPoroUIFigure);
-            app.SystemReadyLampLabel.Position = [945 744 83 22];
+            app.SystemReadyLampLabel.Position = [945 858 83 22];
             app.SystemReadyLampLabel.Text = 'System Ready';
 
             % Create UITable
             app.UITable = uitable(app.PharmPoroUIFigure);
-            app.UITable.ColumnName = {'No.'; 'Name'; 'Thickness'; 'Refractive Index'};
-            app.UITable.ColumnWidth = {40, 'auto', 80, 110};
+            app.UITable.ColumnName = {'No.'; 'Name'; 'Thickness'; 'Refractive Index'; 'Peak1'; 'Peak2'; 'Peak3'};
+            app.UITable.ColumnWidth = {40, 'auto', 75, 110, 75, 75, 75};
             app.UITable.RowName = {};
             app.UITable.CellEditCallback = createCallbackFcn(app, @UITableCellEdit, true);
             app.UITable.CellSelectionCallback = createCallbackFcn(app, @UITableCellSelection, true);
-            app.UITable.Position = [811 51 400 227];
+            app.UITable.Position = [627 60 580 330];
 
             % Create StatusEditField
             app.StatusEditField = uieditfield(app.PharmPoroUIFigure, 'text');
             app.StatusEditField.Editable = 'off';
             app.StatusEditField.BackgroundColor = [0.902 0.902 0.902];
-            app.StatusEditField.Position = [1031 745 173 20];
+            app.StatusEditField.Position = [1031 859 180 20];
 
             % Create PeakFindingPanel
             app.PeakFindingPanel = uipanel(app.PharmPoroUIFigure);
             app.PeakFindingPanel.Title = 'Peak Finding';
-            app.PeakFindingPanel.Position = [913 328 298 185];
+            app.PeakFindingPanel.Position = [913 442 298 185];
 
             % Create FINDPEAKSButton
             app.FINDPEAKSButton = uibutton(app.PeakFindingPanel, 'push');
@@ -928,7 +931,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.SAVEButton.FontSize = 14;
             app.SAVEButton.FontWeight = 'bold';
             app.SAVEButton.FontColor = [0.0745 0.6235 1];
-            app.SAVEButton.Position = [1133 15 71 28];
+            app.SAVEButton.Position = [1108 20 90 28];
             app.SAVEButton.Text = 'SAVE';
 
             % Create REMOVEButton
@@ -938,7 +941,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.REMOVEButton.FontSize = 14;
             app.REMOVEButton.FontWeight = 'bold';
             app.REMOVEButton.FontColor = [1 0.4118 0.1608];
-            app.REMOVEButton.Position = [975 15 71 28];
+            app.REMOVEButton.Position = [910 20 90 28];
             app.REMOVEButton.Text = 'REMOVE';
 
             % Create LOADButton
@@ -948,7 +951,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.LOADButton.FontSize = 14;
             app.LOADButton.FontWeight = 'bold';
             app.LOADButton.FontColor = [0.0745 0.6235 1];
-            app.LOADButton.Position = [1054 15 71 28];
+            app.LOADButton.Position = [1009 20 90 28];
             app.LOADButton.Text = 'LOAD';
 
             % Create ResetPlotButton
@@ -957,7 +960,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.ResetPlotButton.BackgroundColor = [1 1 1];
             app.ResetPlotButton.FontWeight = 'bold';
             app.ResetPlotButton.FontColor = [1 0.4118 0.1608];
-            app.ResetPlotButton.Position = [681 348 96 23];
+            app.ResetPlotButton.Position = [681 462 96 23];
             app.ResetPlotButton.Text = 'Reset Plot';
 
             % Create TABULATETHEMEASUREMENTButton
@@ -967,7 +970,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.TABULATETHEMEASUREMENTButton.FontSize = 14;
             app.TABULATETHEMEASUREMENTButton.FontWeight = 'bold';
             app.TABULATETHEMEASUREMENTButton.FontColor = [0 0.4471 0.7412];
-            app.TABULATETHEMEASUREMENTButton.Position = [925 288 269 30];
+            app.TABULATETHEMEASUREMENTButton.Position = [925 402 269 30];
             app.TABULATETHEMEASUREMENTButton.Text = 'TABULATE THE MEASUREMENT';
 
             % Create Peak1Button
@@ -975,7 +978,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak1Button.ButtonPushedFcn = createCallbackFcn(app, @Peak1ButtonPushed, true);
             app.Peak1Button.BackgroundColor = [1 1 1];
             app.Peak1Button.FontWeight = 'bold';
-            app.Peak1Button.Position = [399 348 83 23];
+            app.Peak1Button.Position = [399 462 83 23];
             app.Peak1Button.Text = 'Peak 1';
 
             % Create Peak2Button
@@ -983,7 +986,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak2Button.ButtonPushedFcn = createCallbackFcn(app, @Peak2ButtonPushed, true);
             app.Peak2Button.BackgroundColor = [1 1 1];
             app.Peak2Button.FontWeight = 'bold';
-            app.Peak2Button.Position = [491 348 83 23];
+            app.Peak2Button.Position = [491 462 83 23];
             app.Peak2Button.Text = 'Peak 2';
 
             % Create Peak3Button
@@ -991,7 +994,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.Peak3Button.ButtonPushedFcn = createCallbackFcn(app, @Peak3ButtonPushed, true);
             app.Peak3Button.BackgroundColor = [1 1 1];
             app.Peak3Button.FontWeight = 'bold';
-            app.Peak3Button.Position = [583 348 83 23];
+            app.Peak3Button.Position = [583 462 83 23];
             app.Peak3Button.Text = 'Peak 3';
 
             % Create ManualSelectionButton
@@ -1000,18 +1003,18 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.ManualSelectionButton.Text = 'Manual Selection';
             app.ManualSelectionButton.BackgroundColor = [1 1 1];
             app.ManualSelectionButton.FontWeight = 'bold';
-            app.ManualSelectionButton.Position = [75 348 136 23];
+            app.ManualSelectionButton.Position = [75 462 136 23];
 
             % Create TimePositionEditFieldLabel
             app.TimePositionEditFieldLabel = uilabel(app.PharmPoroUIFigure);
             app.TimePositionEditFieldLabel.HorizontalAlignment = 'right';
-            app.TimePositionEditFieldLabel.Position = [221 348 77 22];
+            app.TimePositionEditFieldLabel.Position = [221 462 77 22];
             app.TimePositionEditFieldLabel.Text = 'Time Position';
 
             % Create TimePositionEditField
             app.TimePositionEditField = uieditfield(app.PharmPoroUIFigure, 'numeric');
             app.TimePositionEditField.ValueDisplayFormat = '%5.2f';
-            app.TimePositionEditField.Position = [305 348 62 22];
+            app.TimePositionEditField.Position = [305 462 62 22];
 
             % Create PLOTButton
             app.PLOTButton = uibutton(app.PharmPoroUIFigure, 'push');
@@ -1020,7 +1023,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.PLOTButton.FontSize = 14;
             app.PLOTButton.FontWeight = 'bold';
             app.PLOTButton.FontColor = [0 0.4471 0.7412];
-            app.PLOTButton.Position = [817 15 71 28];
+            app.PLOTButton.Position = [711 20 90 28];
             app.PLOTButton.Text = 'PLOT';
 
             % Create HoldPlotButton
@@ -1029,7 +1032,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.HoldPlotButton.BackgroundColor = [1 1 1];
             app.HoldPlotButton.FontWeight = 'bold';
             app.HoldPlotButton.FontColor = [0.4667 0.6745 0.1882];
-            app.HoldPlotButton.Position = [787 348 96 23];
+            app.HoldPlotButton.Position = [787 462 96 23];
 
             % Create plotType
             app.plotType = uibutton(app.PharmPoroUIFigure, 'state');
@@ -1038,7 +1041,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.plotType.BackgroundColor = [1 1 1];
             app.plotType.FontWeight = 'bold';
             app.plotType.FontColor = [0 0.4471 0.7412];
-            app.plotType.Position = [345 18 147 23];
+            app.plotType.Position = [70 21 136 23];
 
             % Create RESETButton
             app.RESETButton = uibutton(app.PharmPoroUIFigure, 'push');
@@ -1047,7 +1050,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.RESETButton.FontSize = 14;
             app.RESETButton.FontWeight = 'bold';
             app.RESETButton.FontColor = [1 0.4118 0.1608];
-            app.RESETButton.Position = [896 15 71 28];
+            app.RESETButton.Position = [811 20 90 28];
             app.RESETButton.Text = 'RESET';
 
             % Show the figure after all components are created

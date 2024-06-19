@@ -9,7 +9,7 @@
       <file>${PROJECT_ROOT}\PharmPoro_resources\icon_16.png</file>
     </param.icons>
     <param.version>1.0</param.version>
-    <param.authnamewatermark>Jongmin Lee</param.authnamewatermark>
+    <param.authnamewatermark>J. Lee</param.authnamewatermark>
     <param.email>jl2112@cam.ac.uk</param.email>
     <param.company>University of Cambridge</param.company>
     <param.summary>Terahertz Pharmaceutical Tablet Refractive Index and Porosity Measurement</param.summary>
