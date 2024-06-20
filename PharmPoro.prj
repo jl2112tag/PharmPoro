@@ -14,11 +14,11 @@
     <param.company>University of Cambridge</param.company>
     <param.summary>Terahertz Pharmaceutical Tablet Refractive Index and Porosity Measurement</param.summary>
     <param.description />
-    <param.screenshot>${PROJECT_ROOT}\PharmPoro.png</param.screenshot>
+    <param.screenshot>${PROJECT_ROOT}\Images\PharmPoro.png</param.screenshot>
     <param.guid />
     <param.installpath.string>\PharmPoro\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
-    <param.logo>C:\Users\Jongmin Lee\Documents\GitHub\CaTx_Menlo\installer_image.png</param.logo>
+    <param.logo>${PROJECT_ROOT}\Images\installer_image.png</param.logo>
     <param.install.notes />
     <param.target.install.notes />
     <param.intermediate>${PROJECT_ROOT}\PharmPoro\for_testing</param.intermediate>
@@ -84,7 +84,7 @@
       <file>${PROJECT_ROOT}\scancontrolclient.py</file>
     </fileset.package>
     <fileset.depfun>
-      <file>${PROJECT_ROOT}\CaT_logo.png</file>
+      <file>${PROJECT_ROOT}\Images\CaT_logo.png</file>
     </fileset.depfun>
     <build-deliverables>
       <file location="${PROJECT_ROOT}\PharmPoro\for_testing" name="PharmPoro.exe" optional="false">C:\Users\Jongmin Lee\Documents\GitHub\PharmPoro\PharmPoro\for_testing\PharmPoro.exe</file>

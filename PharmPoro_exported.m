@@ -623,7 +623,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             app.PharmPoroUIFigure = uifigure('Visible', 'off');
             app.PharmPoroUIFigure.Position = [100 100 1221 900];
             app.PharmPoroUIFigure.Name = 'PharmPoro';
-            app.PharmPoroUIFigure.Icon = fullfile(pathToMLAPP, 'CaT_logo.png');
+            app.PharmPoroUIFigure.Icon = fullfile(pathToMLAPP, 'Images', 'CaT_logo.png');
 
             % Create UIAxes3
             app.UIAxes3 = uiaxes(app.PharmPoroUIFigure);
