@@ -123,7 +123,7 @@ classdef PharmPoro_exported < matlab.apps.AppBase
             drawnow
 
             runPython = true;
-            command = sprintf('python %s --average %i', pythonScript, measAverage);
+            command = sprintf('python %s --average %i &', pythonScript, measAverage);
 
             system(command);
             pause(2.0);

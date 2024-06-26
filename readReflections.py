@@ -60,10 +60,10 @@ def getPulse(data):
             write_status("1 measured")
             waveform_average = 1
             getData = False
+
         else:
             ScanControl.stop()
-            client.loop.stop()   
-            print(f"{numAvg} waveform average")                        
+            client.loop.stop()
             write_status(f"Measurement done!")
 
 def write_status(msg):
